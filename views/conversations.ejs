@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversations</title>
+  <script src="/socket.io/socket.io.js"></script> <!-- Include Socket.IO client -->
+</head>
+<body>
+  <h1>Conversations</h1>
+  <ul id="conversation-list"></ul>
+
+  <script>
+    const socket = io(); // Initialize Socket.IO
+
+    // Fetch conversations
+    fetch('/api/conversations')
+  .then(response => response.json())
+  .then(data => {
+    console.log('Fetched conversations:', data);  // Log the response to the console
+    const conversationList = document.getElementById('conversation-list');
+    data.forEach(conversation => {
+      const li = document.createElement('li');
+      li.innerHTML = `<button onclick="joinConversation('${conversation._id}')">Conversation ${conversation._id}</button>`;
+      conversationList.appendChild(li);
+    });
+  })
+  .catch(error => console.error('Failed to fetch conversations:', error));
+  </script>
+</body>
+</html>

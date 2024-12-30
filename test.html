@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>Socket.IO WebSocket Test</title>
+  </head>
+  <body>
+    <script>
+      const socket = io('http://localhost:3000');
+      socket.on('connect', () => {
+        console.log('Connected to server', socket.id);
+      });
+    </script>
+  </body>
+</html>
