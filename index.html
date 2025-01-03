@@ -12,6 +12,7 @@
     #message-form { display: flex; margin-top: 10px; }
     #message-form input { flex: 1; padding: 10px; }
     #message-form button { padding: 10px; }
+    #message-form input[type="file"] { margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -20,45 +21,71 @@
     <div id="messages"></div>
     <form id="message-form">
       <input type="text" id="message-input" placeholder="Type a message" required />
+      <input type="file" id="image-input" accept="image/*" />
       <button type="submit">Send</button>
     </form>
   </div>
-
   <script>
     // Connect to the Socket.IO server
     const socket = io('http://localhost:3000', { transports: ['websocket'] });
-
+  
     // Elements
     const messagesDiv = document.getElementById('messages');
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
-
+    const imageInput = document.getElementById('image-input');
+  
     // Join a conversation
     const conversationId = "67766c5a2217d3378758d294"; // Example conversation ID
     socket.emit('joinConversation', conversationId);
-
+  
     // Listen for messages
     socket.on('receiveMessage', (message) => {
       const messageElement = document.createElement('div');
-      messageElement.textContent = `[${new Date(message.timestamp).toLocaleTimeString()}] ${message.senderId}: ${message.content}`;
+      if (message.content) {
+        messageElement.textContent = `[${new Date(message.timestamp).toLocaleTimeString()}] ${message.senderId}: ${message.content}`;
+      }
+      if (message.image && message.image.url) {
+        const imageElement = document.createElement('img');
+        imageElement.src = message.image.url;
+        imageElement.style.maxWidth = '300px';
+        messagesDiv.appendChild(imageElement);
+      }
       messagesDiv.appendChild(messageElement);
       messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
     });
-
+  
     // Send a message
     messageForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const content = messageInput.value.trim();
-      if (content) {
-        socket.emit('sendMessage', {
+      const imageFile = imageInput.files[0];
+  
+      if (content || imageFile) {
+        const messageData = {
           conversationId,
           senderId: "63b79c1e1c8b8f456780ef01", // Replace with the actual user ID
           content,
-        });
+        };
+  
+        if (imageFile) {
+          const reader = new FileReader();
+          reader.onloadend = function () {
+            // Base64 encode the image file and send it to the server
+            const imageBase64 = reader.result;
+            messageData.imageFile = imageBase64; // Add image data to message
+            socket.emit('sendMessage', messageData);
+          };
+          reader.readAsDataURL(imageFile); // Read file as base64
+        } else {
+          socket.emit('sendMessage', messageData);
+        }
+  
         messageInput.value = '';
+        imageInput.value = ''; // Reset the image input
       }
     });
-
+  
     // Handle disconnection
     socket.on('disconnect', () => {
       const messageElement = document.createElement('div');
@@ -66,5 +93,6 @@
       messagesDiv.appendChild(messageElement);
     });
   </script>
+  
 </body>
 </html>
