@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.IO Chat - Viewer</title>
+  <script src="https://cdn.socket.io/4.7.0/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    #chat-container { max-width: 600px; margin: 50px auto; }
+    #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; }
+    #reply-form { display: flex; margin-top: 10px; }
+    #reply-form input { flex: 1; padding: 10px; }
+    #reply-form button { padding: 10px; }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Socket.IO Chat - Viewer</h2>
+    <div id="messages"></div>
+    <form id="reply-form">
+      <input type="text" id="reply-input" placeholder="Type a reply" required />
+      <button type="submit">Reply</button>
+    </form>
+  </div>
+
+  <script>
+    const socket = io('http://localhost:3000', { transports: ['websocket'] });
+    const messagesDiv = document.getElementById('messages');
+    const replyForm = document.getElementById('reply-form');
+    const replyInput = document.getElementById('reply-input');
+
+    const conversationId = "67766c5a2217d3378758d294"; // Replace with the actual conversation ID
+    const viewerId = "63b79c1e1c8b8f456780ef02"; // Replace with the actual viewer's user ID
+
+    // Join conversation
+    socket.emit('joinConversation', conversationId);
+
+    // Listen for new messages
+    socket.on('receiveMessage', (message) => {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = `[${new Date(message.timestamp).toLocaleTimeString()}] ${message.senderId}: ${message.content}`;
+      messagesDiv.appendChild(messageElement);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Notify the server that the message has been read
+      socket.emit('markAsRead', { messageId: message._id });
+    });
+
+    // Send a reply
+    replyForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const content = replyInput.value.trim();
+      if (content) {
+        socket.emit('sendMessage', {
+          conversationId,
+          senderId: viewerId,
+          content,
+        });
+        replyInput.value = '';
+      }
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = 'You have been disconnected from the server.';
+      messagesDiv.appendChild(messageElement);
+    });
+  </script>
+</body>
+</html>

@@ -40,6 +40,16 @@ const initializeSocket = (server) => {
   }
 });
 
+socket.on('markAsRead', async (data) => {
+  const { messageId } = data;
+  try {
+    await Message.findByIdAndUpdate(messageId, { isRead: true });
+    console.log(`Message ${messageId} marked as read`);
+  } catch (error) {
+    console.error('Error marking message as read:', error);
+  }
+});
+
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);
     });
