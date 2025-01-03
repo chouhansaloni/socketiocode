@@ -1,10 +1,19 @@
 import express from 'express';
-import { createConversation, getConversationDetails } from '../Controller/conversation.controller.js';
+import {
+  createConversation,
+  getConversationDetails,
+  getUserConversations,
+} from '../Controllers/conversation.controller.js';
 
 const router = express.Router();
 
-// Conversation Routes
-router.post('/conversations', createConversation);
-router.get('/conversations/:conversationId', getConversationDetails);
+// Create a new conversation
+router.post('/', createConversation);
+
+// Get details of a specific conversation
+router.get('/:conversationId', getConversationDetails);
+
+// Get all conversations for a specific user
+router.get('/user/:userId', getUserConversations);
 
 export default router;
